@@ -47,6 +47,8 @@ if 'description' not in st.session_state:
     st.session_state.description = ""
 if 'api_key' not in st.session_state:
     st.session_state.api_key = ""
+if 'is_editing' not in st.session_state:
+    st.session_state.is_editing = False
 
 st.title("🏡 AI Land Property Description Writer")
 st.markdown("Generate professional land property descriptions instantly using AI")
@@ -308,33 +310,48 @@ etc.
             generate_description_from_api(temperature)
     
     if st.session_state.description:
-        col_act1, col_act2, col_act3 = st.columns(3)
+        col_act1, col_act2, col_act3, col_act4 = st.columns(4)
         with col_act1:
-            if st.button("Copy to Clipboard", use_container_width=True):
+            if st.button("✏️ Edit" if not st.session_state.is_editing else "💾 Save", use_container_width=True):
+                st.session_state.is_editing = not st.session_state.is_editing
+                if not st.session_state.is_editing:
+                    st.success("Description saved!")
+        with col_act2:
+            if st.button("📋 Copy", use_container_width=True):
                 st.code(st.session_state.description, language=None)
                 st.success("Ready to copy! Select the text above.")
-        with col_act2:
+        with col_act3:
             st.download_button(
-                label="Download",
+                label="💾 Download",
                 data=st.session_state.description,
                 file_name="property_description.txt",
                 mime="text/plain",
                 use_container_width=True
             )
-        with col_act3:
-            if st.button("Clear", use_container_width=True):
+        with col_act4:
+            if st.button("🗑️ Clear", use_container_width=True):
                 st.session_state.description = ""
+                st.session_state.is_editing = False
                 st.rerun()
         
         st.markdown("---")
         
-        edited_description = st.text_area(
-            "Edit Description (if needed)",
-            value=st.session_state.description,
-            height=350,
-            help="You can edit the generated description here"
-        )
-        st.session_state.description = edited_description
+        if st.session_state.is_editing:
+            edited_description = st.text_area(
+                "Edit Your Description",
+                value=st.session_state.description,
+                height=350,
+                help="Make changes to your description and click Save when done",
+                key="description_editor"
+            )
+            st.session_state.description = edited_description
+        else:
+            st.markdown("**Your Property Description:**")
+            st.markdown(f"""
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea;">
+                {st.session_state.description.replace(chr(10), '<br>')}
+            </div>
+            """, unsafe_allow_html=True)
     else:
         st.markdown("""
         <div class="description-box">
